@@ -1,0 +1,22 @@
+#!/bin/bash
+
+mkdir download 2>/dev/null
+cd download
+
+echo "*** Downloading image and signatures..."
+#wget -c -q http://cdimage.debian.org/cdimage/openstack/current-8/SHA256SUMS
+#wget -c -q http://cdimage.debian.org/cdimage/openstack/current-8/SHA256SUMS.sign
+#wget -c http://cdimage.debian.org/cdimage/openstack/current-8/debian-8-openstack-amd64.qcow2
+
+echo "*** Verifying signatures..."
+if ! gpg --keyring /usr/share/keyrings/debian-role-keys.gpg --verify SHA256SUMS.sign; then
+    echo "Error: SHA256SUMS is invalid!"
+    exit 2
+fi
+
+if [[ $(egrep "\.qcow2$" SHA256SUMS | sed -e 's/ .*//') == $(sha256sum debian-8-openstack-amd64.qcow2 | sed -e 's/ .*//') ]]; then
+    echo "*** Image verified!"
+else
+    echo "Error: Image verification failed!"
+    exit 2
+fi

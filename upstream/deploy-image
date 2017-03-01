@@ -1,0 +1,70 @@
+#!/bin/bash
+
+export image="$1"
+export hostname="$2"
+export vg="foo-vg"
+
+export vm_mac="$(echo -n 52:54:00; dd bs=1 count=3 if=/dev/urandom 2>/dev/null |hexdump -v -e '/1 ":%02X"')"
+export vm_root_volume="vm-$hostname-root"
+export vm_root_size="5G"
+
+if [[ ! $EUID -eq 0 ]]; then
+    echo "You must be root to run this utility."
+    exit 1
+fi
+
+if [[ ! -f "$image" ]]; then
+    echo "Error: image file not found!"
+    exit 1
+fi
+
+if [[ "" == "$hostname" ]]; then
+    echo "Error: hostname not specified!"
+    exit 1
+fi
+
+lv_exists() {
+    if lvs --noheadings --separator=',' --select="lv_name=$1" | cut -f1 -d',' | grep "$1" >/dev/null; then
+        return 0
+    else
+        return 1
+    fi
+}
+
+echo "*** Creating root LV for \`$hostname'..."
+if lv_exists $vm_root_volume; then
+    echo "There is already an LV \`$vm_root_volume'."
+    exit 1
+fi
+if ! lvcreate -L"$vm_root_size" -n "$vm_root_volume" "/dev/$vg"; then
+    echo "*** Error: could not create root LV :("
+    exit 1
+fi
+
+echo "*** Writing image to root LV..."
+qemu-img convert -O raw "$image" "/dev/$vg/$vm_root_volume" -p
+
+echo "*** Creating VM for libvirt..."
+envsubst < templates/libvirt-template.xml > "/etc/libvirt/qemu/$hostname.xml"
+virsh define "/etc/libvirt/qemu/$hostname.xml"
+
+echo "*** Creating configuration drive..."
+export uuid="$(virsh dominfo "$hostname" | egrep '^UUID:' | sed -e 's/.* //')"
+tempdir="$(mktemp -d)"
+# openstack style drive
+mkdir -p "$tempdir/drive/openstack/latest"
+envsubst < templates/meta_data.json > "$tempdir/drive/openstack/latest/meta_data.json"
+envsubst < templates/user_data > "$tempdir/drive/openstack/latest/user_data"
+genisoimage -output "$tempdir/config.iso" -volid config-2 -joliet -rock "$tempdir/drive"
+cp "$tempdir/config.iso" "/var/lib/libvirt/images/config-$hostname.iso"
+cat > "$tempdir/config.xml" <<EOF
+<disk type='file' device='cdrom'>
+   <driver name='qemu' type='raw' cache='none'/>
+   <source file='/var/lib/libvirt/images/config-$hostname.iso'/>
+   <readonly/>
+   <target dev='hdc'/>
+</disk>
+EOF
+virsh attach-device --config "$hostname" "$tempdir/config.xml"
+rm -r "$tempdir"
+

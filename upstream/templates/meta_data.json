@@ -1,0 +1,6 @@
+{  
+    "uuid":"$uuid",
+    "name": "$hostname",
+    "hostname": "$hostname.example.com",
+    "dsmode": "local"
+}
