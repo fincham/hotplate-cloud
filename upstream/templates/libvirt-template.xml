@@ -1,5 +1,6 @@
 <domain type='kvm'>
-  <name>$hostname</name>
+<features><acpi/></features>
+<name>$hostname</name>
   <memory unit='KiB'>1048576</memory>
   <currentMemory unit='KiB'>1048576</currentMemory>
   <vcpu placement='static'>2</vcpu>
@@ -57,24 +58,6 @@
     <console type='pty'>
       <target type='serial' port='0'/>
     </console>
-    <channel type='spicevmc'>
-      <target type='virtio' name='com.redhat.spice.0'/>
-      <address type='virtio-serial' controller='0' bus='0' port='1'/>
-    </channel>
-    <input type='keyboard' bus='ps2'/>
-    <graphics type='spice' autoport='yes'/>
-    <video>
-      <model type='qxl' ram='65536' vram='65536' heads='1'/>
-      <address type='pci' domain='0x0000' bus='0x00' slot='0x02' function='0x0'/>
-    </video>
-    <redirdev bus='usb' type='spicevmc'>
-    </redirdev>
-    <redirdev bus='usb' type='spicevmc'>
-    </redirdev>
-    <redirdev bus='usb' type='spicevmc'>
-    </redirdev>
-    <redirdev bus='usb' type='spicevmc'>
-    </redirdev>
     <memballoon model='virtio'>
       <address type='pci' domain='0x0000' bus='0x00' slot='0x08' function='0x0'/>
     </memballoon>
