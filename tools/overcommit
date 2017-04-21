@@ -1,0 +1,8 @@
+#!/bin/bash
+
+virsh list | awk '/running/ {print $2}' | sort | while read vm; do echo -e "$vm\t"; virsh dominfo $vm | grep "Used memory"; done
+commit=`virsh list | awk '/running/ {print $2}' | while read vm; do virsh dominfo $vm | grep "Used memory"; done | awk '{total += $3} END {print total/1024}'`
+total=`free -m | awk '/^Mem/ {print $2}'`
+
+echo -n "Memory overcommit ratio (commit/total): "
+echo "scale=2; $commit / $total" | bc
