@@ -2,7 +2,12 @@
 
 export hostname="$1"
 
+if [[ "" == "$hostname" ]]; then
+    echo "Need to specify the hostname, yo."
+    exit 1
+fi
+
 virsh destroy "$1"
 virsh undefine "$1"
-lvremove "/dev/akl2-vg/vm-$1-root"
+lvremove "/dev/lajolla/vm-$1-root"
 rm "/var/lib/libvirt/images/config-$1.iso"
