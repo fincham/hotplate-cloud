@@ -1,0 +1,7 @@
+#!/bin/bash
+
+# Just an example of something you might like to do inside the chroot during provisioning...
+# Probably best to keep this brief for compatbility (and provisioning speed and safety)
+
+codename=$(lsb_release -s -c)
+echo "deb http://http.debian.net/debian/ $codename-backports main contrib non-free" > /etc/apt/sources.list.d/backports.list
