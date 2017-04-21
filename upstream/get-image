@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# This script depends on the "debian-keyring" package being installed to get the debian-role-keys keyring.
+
 mkdir download 2>/dev/null
 cd download
 
