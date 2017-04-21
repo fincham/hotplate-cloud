@@ -1,11 +1,10 @@
 #cloud-config 
 password: debian
 chpasswd: { expire: False }
-write_files:
--   content: |
-        auto lo
-        iface lo inet loopback
-
-        iface eth0 inet manual
-        iface eth0 inet6 auto
-    path: /etc/network/interfaces
+users:
+  - default
+  - name: friendlyadmin
+    shell: /bin/bash
+    groups: sudo
+    ssh-authorized-keys: 
+      - ssh-rsa AAAAB... cardno:000306041672
